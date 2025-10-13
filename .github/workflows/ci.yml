@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'          
+          cache: 'npm'
+          cache-dependency-path: |
+            **/package-lock.json
+            **/npm-shrinkwrap.json
+
+      - name: Use npm ci if lockfile exists (else install)
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          else
+            npm i
+          fi
+
+    
+      - name: Lint (skip React & tests)
+        if: ${{ hashFiles('**/.eslintrc*') != '' }}
+        shell: bash
+        run: |
+          npx eslint . --ext .js,.jsx,.ts,.tsx \
+            --ignore-pattern '**/*.test.*' \
+            --ignore-pattern '**/*.spec.*' \
+            --ignore-pattern '**/__tests__/**' \
+            --rule 'react/*:off' \
+            --rule 'react-hooks/*:off' \
+            --rule 'jsx-a11y/*:off'
+
+      - name: Build
+        env:
+          CI: true
+          # 如需 Vite 环境变量，请在 repo 的 Actions Secrets 里创建 VITE_XXX，然后在此注入
+          # VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
+        run: npm run build
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-dist
+          path: dist
+          if-no-files-found: error

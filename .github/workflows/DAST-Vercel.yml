@@ -1,0 +1,50 @@
+name: DAST-Vercel
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+permissions:
+  contents: read
+  actions: write  # ← allow creating artifact containers
+
+jobs:
+  zap-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get Vercel Preview URL (commit → PR → latest)
+        id: vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT: ${{ secrets.VERCEL_PROJECT }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEAM_ARG=""
+          if [ -n "${VERCEL_TEAM_ID:-}" ]; then TEAM_ARG="&teamId=$VERCEL_TEAM_ID"; fi
+          JSON=$(curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?app=$VERCEL_PROJECT&target=preview&limit=100$TEAM_ARG")
+          URL=$(echo "$JSON" | jq -r --arg SHA "$HEAD_SHA" \
+            '.deployments[] | select(.meta.githubCommitSha == $SHA) | .url' | head -n1)
+          if [ -z "${URL:-}" ] || [ "$URL" = "null" ]; then
+            URL=$(echo "$JSON" | jq -r --argjson PR "$PR_NUMBER" \
+              '.deployments[] | select(.meta.githubPrId == $PR) | .url' | head -n1)
+          fi
+          if [ -z "${URL:-}" ] || [ "$URL" = "null" ]; then
+            URL=$(echo "$JSON" | jq -r '.deployments | sort_by(.createdAt // .created) | reverse | .[0].url')
+          fi
+          if [ -z "${URL:-}" ] || [ "$URL" = "null" ]; then
+            echo "cannot find Preview URL"; exit 1
+          fi
+          echo "preview=https://$URL" >> "$GITHUB_OUTPUT"
+          echo "✅ Found preview: https://$URL"
