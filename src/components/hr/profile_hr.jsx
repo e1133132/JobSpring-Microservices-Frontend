@@ -34,7 +34,7 @@ export default function ProfileHR() {
                 return;
             }
 
-            const res = await axios.get("/api/hr/company-name", {
+            const res = await axios.get("/api/user/hr/company-name", {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
