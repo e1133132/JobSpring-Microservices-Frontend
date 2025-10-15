@@ -111,15 +111,21 @@ export default function JobDetail() {
             }
 
             const res = await api.post(`/api/applications/${id}/applications`, formData, );
+            const data = res.data;
+            console.log("Response:", data);
+            if (data?.publicId) {
+                console.log("ID:", data.publicId);
 
-            console.log("Response:", res);
-
-            alert("Apply success!");
+                // localStorage.setItem("public_id", data.publicId);
+                alert(`Apply successfully!`);
+            } else {
+                alert("Apply Successfully!");
+            }
             setShowUpload(false);
             setSelectedFile(null);
         } catch (e) {
             console.error("Failed to apply:", e);
-            alert("Apply failed!");
+            alert("Apply failed! You have applied before.");
         }
     };
 
