@@ -39,7 +39,7 @@ export default function Profile() {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem("jobspring_token");
-                const response = await axios.get("/api/profile", {
+                const response = await axios.get("/api/user/profile", {
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${token}`
@@ -85,7 +85,7 @@ export default function Profile() {
         const fetchSkills = async () => {
             try {
                 const token = localStorage.getItem("jobspring_token");
-                const response = await axios.get("/api/skills", {
+                const response = await axios.get("/api/user/skills", {
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${token}`
@@ -161,7 +161,7 @@ export default function Profile() {
 
         try {
             const token = localStorage.getItem("jobspring_token");
-            const response = await axios.post("/api/profile", payload, {
+            const response = await axios.post("/api/user/profile", payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`

@@ -10,7 +10,6 @@ export default function CompanyDetail() {
     const [company, setCompany] = useState(null);
     const [activeTab, setActiveTab] = useState("about");
     const [jobs, setJobs] = useState([]);
-    const [reviews, setReviews] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -23,7 +22,7 @@ export default function CompanyDetail() {
         const fetchCompany = async () => {
             try {
                 const token = localStorage.getItem("jobspring_token");
-                const res = await api.get(`/api/job_seeker/company/${companyId}`, {
+                const res = await api.get(`/api/company/${companyId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setCompany(res.data);
@@ -41,7 +40,7 @@ export default function CompanyDetail() {
         const fetchJobs = async () => {
             try {
                 const token = localStorage.getItem("jobspring_token");
-                const res = await api.get(`/api/companies/${companyId}/jobs?page=0&size=10`, {
+                const res = await api.get(`/api/company/${companyId}/jobs?page=0&size=10`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setJobs(res.data.content || res.data);
@@ -50,21 +49,6 @@ export default function CompanyDetail() {
             }
         };
         fetchJobs();
-    }, [companyId]);
-
-    useEffect(() => {
-        const fetchReviews = async () => {
-            try {
-                const token = localStorage.getItem("jobspring_token");
-                const res = await api.get(`/api/companies/${companyId}/reviews`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setReviews(res.data.content || []);
-            } catch (err) {
-                console.error("Failed to fetch reviews:", err);
-            }
-        };
-        fetchReviews();
     }, [companyId]);
 
     if (loading) return <div className="section">Loading company details...</div>;
@@ -124,7 +108,6 @@ export default function CompanyDetail() {
                     {[
                         { key: "about", label: "Company Intro" },
                         { key: "jobs", label: "Posted Jobs" },
-                        { key: "reviews", label: "Reviews" },
                     ].map((tab) => (
                         <button
                             key={tab.key}
@@ -263,61 +246,6 @@ export default function CompanyDetail() {
                             )}
                         </div>
                     )}
-
-                    {activeTab === "reviews" && (
-                        <div>
-                            {reviews.length === 0 ? (
-                                <p>No reviews yet.</p>
-                            ) : (
-                                reviews.map((r) => (
-                                    <div
-                                        key={r.reviewId}
-                                        style={{
-                                            border: "1px solid #e5e7eb",
-                                            borderRadius: "12px",
-                                            padding: "16px 20px",
-                                            marginBottom: "14px",
-                                            background: "#f9fafb",
-                                            boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                                        }}
-                                    >
-                                        <p
-                                            style={{
-                                                margin: "0 0 10px 0",
-                                                color: "#111827",
-                                                fontSize: "15px",
-                                                lineHeight: 1.6,
-                                            }}
-                                        >
-                                            {r.content}
-                                        </p>
-
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                color: "#6b7280",
-                                                fontSize: "13px",
-                                            }}
-                                        >
-                                            <span>⭐ {r.rating} / 5</span>
-                                            <span>
-                            {new Date(r.publicAt).toLocaleDateString("en-GB", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </span>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    )}
-
                 </div>
 
                 <div style={{ marginTop: "40px" }}>
