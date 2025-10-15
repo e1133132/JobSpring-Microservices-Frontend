@@ -106,7 +106,7 @@ export default function CreateCompany() {
             }
 
 
-            const res = await api.post("/api/admin/company/create", fd,
+            const res = await api.post("/api/company/company/create", fd,
                 {
                     onUploadProgress: (p) => {
                         if (p.total) setUploadProgress(Math.round((p.loaded * 100) / p.total));

@@ -2,9 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navigation from "../navigation.jsx";
 import { FaArrowLeft } from "react-icons/fa";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import api from "../../services/api.js";
-
 import { getCurrentUser } from "../../services/authService";
 
 const STATUS_MAP = {
@@ -22,45 +21,11 @@ function formatDate(iso) {
     }
 }
 
-function stripBase64Prefix(b64) {
-    if (!b64) return "";
-    const i = b64.indexOf("base64,");
-    return i >= 0 ? b64.slice(i + "base64,".length) : b64;
-}
-
-function isPdfBase64(b64) {
-    if (!b64) return false;
-    const raw = stripBase64Prefix(b64);
-    return raw.startsWith("JVBERi0");
-}
-function base64ToBlob(b64, mime = "application/octet-stream") {
-    const raw = stripBase64Prefix(b64);
-    const byteChars = atob(raw);
-    const len = byteChars.length;
-    const chunk = 1024 * 1024; 
-    const chunks = [];
-    for (let i = 0; i < len; i += chunk) {
-        const end = Math.min(i + chunk, len);
-        const slice = byteChars.slice(i, end);
-        const arr = new Array(slice.length);
-        for (let j = 0; j < slice.length; j++) arr[j] = slice.charCodeAt(j);
-        chunks.push(new Uint8Array(arr));
-    }
-    return new Blob(chunks, { type: mime });
-}
-
-function toPdfDataUrl(b64) {
-    if (!b64) return "";
-    if (b64.startsWith("data:")) return b64;
-    return `data:application/pdf;base64,${stripBase64Prefix(b64)}`;
-}
-
 function buildFileUrl(url) {
     if (!url) return "";
     if (/^https?:\/\//i.test(url)) return url;
     return `${window.location.origin}${url.startsWith("/") ? "" : "/"}${url}`;
 }
-
 
 export default function ApplicationDetail() {
     const { state } = useLocation();
@@ -70,7 +35,7 @@ export default function ApplicationDetail() {
     const [name] = useState(getCurrentUser() ? getCurrentUser().fullName : "guest");
     const [data, setData] = useState([]);
     const [, setLoading] = useState(true);
-    const [updating,] = useState(false);
+    const [updating] = useState(false);
     const [, setError] = useState("");
     const [previewUrl, setPreviewUrl] = useState("");
 
@@ -82,12 +47,7 @@ export default function ApplicationDetail() {
         setLoading(true);
         setError("");
         try {
-            console.log("id:" + `/api/applications/${id}`);
             const r = await api.get(`/api/applications/${id}`);
-            console.log("raw response:", r);
-            console.log("application object:", r.data);
-            console.log("application json:", JSON.stringify(r.data));
-            console.log("application pretty:\n", JSON.stringify(r.data, null, 2));
             setData(r.data);
         } catch (e) {
             setError(e.message || "load failed");
@@ -96,59 +56,43 @@ export default function ApplicationDetail() {
         }
     }
 
-    const rawFile = data?.resumeUrl;
+    // ✅ 新字段：后端现在会给一个文件ID（示例名 resumeFileId）
+    const resumeFileId = data?.resumeFileId || data?.resume?.id || null;
 
+    // 兼容旧字段：如果后端历史数据里还有 resumeUrl（可能是 http 链接或 data:URL）
+    const legacyResumeUrl = data?.resumeUrl || "";
+
+    // 🔎 判断文件类型（现在以“有文件ID=就是PDF”优先；否则看旧URL后缀）
     const fileKind = useMemo(() => {
-        if (!rawFile) return "none";
-        if (rawFile.startsWith("data:")) {
-            return rawFile.includes("application/pdf") ? "pdf" : "other";
-        }
-        if (isPdfBase64(rawFile)) return "pdf";
-
-        const lower = rawFile.split("?")[0].toLowerCase();
-        if (lower.startsWith("http")) {
-            if (lower.endsWith(".pdf")) return "pdf";
-            if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(lower)) return "image";
-            return "other";
-        }
+        if (resumeFileId) return "pdf"; // 新逻辑：文件ID代表后端PDF下载
+        if (!legacyResumeUrl) return "none";
+        const lower = legacyResumeUrl.split("?")[0].toLowerCase();
+        if (lower.endsWith(".pdf") || legacyResumeUrl.startsWith("data:application/pdf")) return "pdf";
+        if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lower)) return "image";
         return "other";
-    }, [rawFile]);
+    }, [resumeFileId, legacyResumeUrl]);
 
-
-
+    // 🔗 生成预览地址：
+    //   - 新：/api/files/{id}/download 直接预览（后端设置 inline）
+    //   - 旧：把 resumeUrl 兜底转为可访问URL
     useEffect(() => {
-        let toRevoke = "";
-        if (!rawFile) { setPreviewUrl(""); return; }
-
-        if (fileKind === "pdf") {
-            if (rawFile.startsWith("data:")) {
-                setPreviewUrl(rawFile);
-            } else if (isPdfBase64(rawFile)) {
-                const blob = base64ToBlob(rawFile, "application/pdf");
-                const url = URL.createObjectURL(blob);
-                setPreviewUrl(url);
-                toRevoke = url;
-            } else if (/^https?:\/\//i.test(rawFile)) {
-                setPreviewUrl(buildFileUrl(rawFile));
-            } else {
-                setPreviewUrl(toPdfDataUrl(rawFile));
-            }
+        if (resumeFileId) {
+            setPreviewUrl(`/api/files/${resumeFileId}/download`);
+        } else if (legacyResumeUrl) {
+            // 旧数据兜底
+            setPreviewUrl(buildFileUrl(legacyResumeUrl));
         } else {
-            setPreviewUrl(buildFileUrl(rawFile));
+            setPreviewUrl("");
         }
-
-        return () => {
-            if (toRevoke) URL.revokeObjectURL(toRevoke);
-        };
-    }, [rawFile, fileKind]);
+    }, [resumeFileId, legacyResumeUrl]);
 
     const statusInfo = STATUS_MAP[data?.status ?? 0] ?? STATUS_MAP[0];
 
     async function handleUpdateStatus(status) {
         try {
-            await api.patch(`/api/hr/applications/${id}/status`, {status});
-            const word=status===2?'passed':'rejected';
-            Swal.fire('Success', 'Application status '+word, 'success');
+            await api.patch(`/api/hr/applications/${id}/status`, { status });
+            const word = status === 2 ? "passed" : "rejected";
+            Swal.fire("Success", "Application status " + word, "success");
         } catch (error) {
             console.error("/api/hr/applications:", error.response ?? error);
         }
@@ -160,25 +104,36 @@ export default function ApplicationDetail() {
             <div className="topbar" style={{ marginLeft: "24px" }}>
                 <button className="btn ghost flex items-center gap-2" onClick={() => navigate(-1)}>
                     <FaArrowLeft className="icon" aria-hidden="true" />
-                    <span >Back</span>
+                    <span>Back</span>
                 </button>
             </div>
 
-            <div className="card" style={{ margin: "12px 24px"}}>
+            <div className="card" style={{ margin: "12px 24px" }}>
                 <header className="header">
                     <div>
                         <div className="title">Application #{data.id}</div>
-                        <div className="sub">Job: <strong>{data.jobTitle}</strong></div>
+                        <div className="sub">
+                            Job: <strong>{data.jobTitle}</strong>
+                        </div>
                     </div>
                     <div className={statusInfo.className}>{statusInfo.label}</div>
                 </header>
 
                 <section className="meta">
-                    <div><span className="label">Applicant</span><div className="val">{data.applicantName}</div></div>
-                    <div><span className="label">Email</span>
-                        <div className="val"><a href={`mailto:${data.applicantEmail}`}>{data.applicantEmail}</a></div>
+                    <div>
+                        <span className="label">Applicant</span>
+                        <div className="val">{data.applicantName}</div>
                     </div>
-                    <div><span className="label">Applied At</span><div className="val">{formatDate(data.appliedAt)}</div></div>
+                    <div>
+                        <span className="label">Email</span>
+                        <div className="val">
+                            <a href={`mailto:${data.applicantEmail}`}>{data.applicantEmail}</a>
+                        </div>
+                    </div>
+                    <div>
+                        <span className="label">Applied At</span>
+                        <div className="val">{formatDate(data.appliedAt)}</div>
+                    </div>
                 </section>
 
                 <section className="preview-wrap">
@@ -187,17 +142,17 @@ export default function ApplicationDetail() {
                         <div className="ph-actions">
                             {previewUrl && (
                                 <>
-                                    <a className="btn primary small" href={previewUrl} download>download resume</a>
+                                    {/* download 按钮仍然可用：浏览器会直接下载或打开另存为 */}
+                                    <a className="btn primary small" href={previewUrl} download>
+                                        download resume
+                                    </a>
                                 </>
                             )}
                         </div>
                     </div>
 
-
                     <div className="preview-pane" aria-label="Resume preview">
-                        {!previewUrl && (
-                            <div className="muted">No Document{data.resumeProfile ? "text abstract:" : ""}</div>
-                        )}
+                        {!previewUrl && <div className="muted">No Document</div>}
 
                         {previewUrl && fileKind === "pdf" && (
                             <iframe
@@ -215,12 +170,9 @@ export default function ApplicationDetail() {
 
                         {previewUrl && fileKind === "other" && (
                             <div className="muted">
-                                This type of file cannot be previewed within the current window. Please use &quot;Open in New Window&quot; or &quot;Download Attachment&quot; to view it.
+                                This type of file cannot be previewed within the current window. Please use &quot;Open in
+                                New Window&quot; or &quot;Download Attachment&quot; to view it.
                             </div>
-                        )}
-
-                        {!previewUrl && data.resumeProfile && (
-                            <pre className="text-preview">{data.resumeProfile}</pre>
                         )}
                     </div>
                 </section>
@@ -242,6 +194,7 @@ export default function ApplicationDetail() {
                     </button>
                 </footer>
             </div>
+
 
             <style>{`
       *{box-sizing:border-box}

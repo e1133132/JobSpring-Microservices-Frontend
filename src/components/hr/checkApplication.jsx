@@ -37,7 +37,7 @@ export default function CheckApplication() {
 
   async function fetchApplications() {
     try {
-      const res = await api.get("/api/hr/applications", { params: { page: 0, size: 50 } });
+      const res = await api.get("/api/application/applications", { params: { page: 0, size: 50 } });
       const payload = res.data;
       const list = Array.isArray(payload) ? payload : payload?.content ?? [];
       setApps(list ?? []);

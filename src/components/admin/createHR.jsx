@@ -44,7 +44,7 @@ export default function CreateHR() {
         if (!q.trim()) { setList([]); return; }
         setLoading(true);
         try {
-            const res = await api.get("/api/admin/search_user", { params: { q: q.trim() } });
+            const res = await api.get("/api/user/search_user", { params: { q: q.trim() } });
             const raw = Array.isArray(res.data?.content)
                 ? res.data.content
                 : (Array.isArray(res.data) ? res.data : []);
@@ -62,7 +62,7 @@ export default function CreateHR() {
         if (companies.length > 0 || companiesLoading) return;
         setCompaniesLoading(true);
         try {
-            const res = await api.get("/api/admin/company/list");
+            const res = await api.get("/api/company/company/list");
             const raw = Array.isArray(res.data?.content) ? res.data.content : [];
 
             const items = raw
@@ -94,7 +94,7 @@ export default function CreateHR() {
             return;
         }
         try {
-            await api.patch(`/api/admin/${userId}/make-hr`, { companyId: picked });
+            await api.patch(`/api/user/${userId}/make-hr`, { companyId: picked });
             setList((prev) => prev.map((u) => (u.id === userId ? { ...u, role: "hr" } : u)));
             Swal.fire({ icon: "success", title: "Succeeded", text: `User ${userId} is now HR of ${picked}.` });
         } catch (e) {
