@@ -93,7 +93,7 @@ export default function PostJob({ onSubmit }) {
             if (onSubmit) {
                 await onSubmit(payload);
             } else {
-                await api.post(`/api/hr/companies/${companyId}/jobs`, payload);
+                await api.post(`/api/user/companies/${companyId}/jobs`, payload);
             }
             console.log("Post successfully!");
             setForm(initialState);

@@ -48,7 +48,7 @@ export default function UpdateJob() {
         if (!jobId) return;
         (async () => {
             try {
-                const res = await api.get(`/api/hr/jobs-detail/${jobId}?t=${Date.now()}`);
+                const res = await api.get(`/api/user/hr/jobs-detail/${jobId}?t=${Date.now()}`);
                 const job = res.data;
                 setForm({
                     title: job.title || "",
@@ -111,7 +111,7 @@ export default function UpdateJob() {
 
         try {
             setSubmitting(true);
-            const res = await api.patch(`/api/hr/companies/${companyId}/jobs/${jobId}`, payload);
+            const res = await api.patch(`/api/user/companies/${companyId}/jobs/${jobId}`, payload);
             console.log("Updated:", res.data);
             setServerMsg("Job updated successfully!");
             setTimeout(() => navigate("/hr/JobPosition"), 1200);
