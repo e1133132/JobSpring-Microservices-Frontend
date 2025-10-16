@@ -46,7 +46,7 @@ export default function CheckCompanyJobPosition() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/api/hr/companies/jobs");
+      const res = await api.get("/api/job/companies/jobs");
       const raw = Array.isArray(res.data?.content) ? res.data.content
                 : Array.isArray(res.data) ? res.data
                 : [];

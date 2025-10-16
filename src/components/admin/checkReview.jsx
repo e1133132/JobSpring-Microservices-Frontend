@@ -156,7 +156,9 @@ export default function CheckReview() {
                         Showing {filtered?.length} result{filtered?.length === 1 ? "" : "s"}
                     </div>
 
-                    <div className="grid">
+                    <div className="grid" style={{display:'flex', flexDirection:'column', gap:13}}>
+
+                        
                         {filtered?.length === 0 && <div className="muted">No reviews found.</div>}
 
                         {filtered?.map((r) => {

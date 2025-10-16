@@ -33,10 +33,10 @@ export default function CreateHR() {
     const [error, setError] = useState("");
 
 
-    const [companies, setCompanies] = useState([]);           
+    const [companies, setCompanies] = useState([]);
     const [companiesLoading, setCompaniesLoading] = useState(false);
-    const [pickerOpenFor, setPickerOpenFor] = useState(null);  
-    const [selectedCompany, setSelectedCompany] = useState({}); 
+    const [pickerOpenFor, setPickerOpenFor] = useState(null);
+    const [selectedCompany, setSelectedCompany] = useState({});
 
     async function handleSearch(ev) {
         ev?.preventDefault?.();
@@ -62,7 +62,7 @@ export default function CreateHR() {
         if (companies.length > 0 || companiesLoading) return;
         setCompaniesLoading(true);
         try {
-            const res = await api.get("/api/company/company/list");
+            const res = await api.get("/api/company/list");
             const raw = Array.isArray(res.data?.content) ? res.data.content : [];
 
             const items = raw
@@ -88,13 +88,16 @@ export default function CreateHR() {
     }
 
     async function makeHR(userId) {
+        console.log("makeHR", userId, JSON.stringify(selectedCompany));
+        console.log("selectedCompany", selectedCompany[userId]);
         const picked = selectedCompany[userId];
+        console.log("makeHR", { userId, picked });
         if (!picked) {
             Swal.fire({ icon: "warning", title: "Please select company first", text: "pls select company first" });
             return;
         }
         try {
-            await api.patch(`/api/user/${userId}/make-hr`, { companyId: picked });
+            await api.post(`/api/user/${userId}/make-hr`, { companyId: picked });
             setList((prev) => prev.map((u) => (u.id === userId ? { ...u, role: "hr" } : u)));
             Swal.fire({ icon: "success", title: "Succeeded", text: `User ${userId} is now HR of ${picked}.` });
         } catch (e) {
@@ -108,6 +111,15 @@ export default function CreateHR() {
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
     }, [q]);
+
+    useEffect(() => {
+        if (pickerOpenFor && !selectedCompany[pickerOpenFor] && companies.length > 0) {
+            setSelectedCompany((s) => ({
+                ...s,
+                [pickerOpenFor]: Number(companies[0].id), 
+            }));
+        }
+    }, [companies, pickerOpenFor]);
 
     return (
         <div className="app-root">
@@ -203,14 +215,14 @@ export default function CreateHR() {
 
                                             {open && (
                                                 <select
-                                                    value={selectedCompany[u.id] ?? ""}
+                                                    value={selectedCompany[u.id] ?? (companies[0]?.id ?? "")}
                                                     onChange={(e) =>
                                                         setSelectedCompany((s) => ({
                                                             ...s,
                                                             [u.id]: e.target.value ? Number(e.target.value) : null,
                                                         }))
                                                     }
-                                                >
+                                                > {<option value="" disabled>Select company…</option>}
                                                     {companies.map((c) => (
                                                         <option key={c.id} value={c.id}>
                                                             {c.name}

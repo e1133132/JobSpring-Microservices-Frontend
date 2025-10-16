@@ -8,8 +8,8 @@ import { getCurrentUser } from "../../services/authService";
 
 const STATUS_MAP = {
     0: { label: "Pending", className: "chip chip-pending" },
-    1: { label: "Approved", className: "chip chip-approved" },
-    2: { label: "Rejected", className: "chip chip-rejected" },
+    2: { label: "Approved", className: "chip chip-approved" },
+    3: { label: "Rejected", className: "chip chip-rejected" },
 };
 
 function formatDate(iso) {
@@ -19,12 +19,6 @@ function formatDate(iso) {
     } catch {
         return "-";
     }
-}
-
-function buildFileUrl(url) {
-    if (!url) return "";
-    if (/^https?:\/\//i.test(url)) return url;
-    return `${window.location.origin}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
 export default function ApplicationDetail() {
@@ -38,6 +32,7 @@ export default function ApplicationDetail() {
     const [updating] = useState(false);
     const [, setError] = useState("");
     const [previewUrl, setPreviewUrl] = useState("");
+    const [resumeFileId,] = useState("");
 
     useEffect(() => {
         load();
@@ -47,7 +42,10 @@ export default function ApplicationDetail() {
         setLoading(true);
         setError("");
         try {
-            const r = await api.get(`/api/applications/${id}`);
+            const r = await api.get(`/api/application/${id}`);
+            console.log("Fetched application:", r.data);
+            const resumeFileId = r.data?.resumeFileId || null;
+            handlePreviewFile(resumeFileId || null);
             setData(r.data);
         } catch (e) {
             setError(e.message || "load failed");
@@ -56,15 +54,11 @@ export default function ApplicationDetail() {
         }
     }
 
-    // ✅ 新字段：后端现在会给一个文件ID（示例名 resumeFileId）
-    const resumeFileId = data?.resumeFileId || data?.resume?.id || null;
 
-    // 兼容旧字段：如果后端历史数据里还有 resumeUrl（可能是 http 链接或 data:URL）
     const legacyResumeUrl = data?.resumeUrl || "";
 
-    // 🔎 判断文件类型（现在以“有文件ID=就是PDF”优先；否则看旧URL后缀）
     const fileKind = useMemo(() => {
-        if (resumeFileId) return "pdf"; // 新逻辑：文件ID代表后端PDF下载
+        if (resumeFileId) return "pdf";
         if (!legacyResumeUrl) return "none";
         const lower = legacyResumeUrl.split("?")[0].toLowerCase();
         if (lower.endsWith(".pdf") || legacyResumeUrl.startsWith("data:application/pdf")) return "pdf";
@@ -72,25 +66,27 @@ export default function ApplicationDetail() {
         return "other";
     }, [resumeFileId, legacyResumeUrl]);
 
-    // 🔗 生成预览地址：
-    //   - 新：/api/files/{id}/download 直接预览（后端设置 inline）
-    //   - 旧：把 resumeUrl 兜底转为可访问URL
-    useEffect(() => {
-        if (resumeFileId) {
-            setPreviewUrl(`/api/files/${resumeFileId}/download`);
-        } else if (legacyResumeUrl) {
-            // 旧数据兜底
-            setPreviewUrl(buildFileUrl(legacyResumeUrl));
-        } else {
-            setPreviewUrl("");
-        }
-    }, [resumeFileId, legacyResumeUrl]);
+
 
     const statusInfo = STATUS_MAP[data?.status ?? 0] ?? STATUS_MAP[0];
 
+    async function handlePreviewFile(resumeFileId) {
+        try {
+            const res = await api.get(
+                `/api/application/download/${encodeURIComponent(resumeFileId)}`,
+                { responseType: "blob" }
+            );
+            const currentUrl = URL.createObjectURL(res.data);
+            setPreviewUrl(currentUrl);
+            console.log("preview url", currentUrl);
+        } catch (error) {
+            console.error("download error", error.response ?? error);
+        }
+    }
+
     async function handleUpdateStatus(status) {
         try {
-            await api.patch(`/api/hr/applications/${id}/status`, { status });
+            await api.post(`/api/application/applications/${id}/status`, { status });
             const word = status === 2 ? "passed" : "rejected";
             Swal.fire("Success", "Application status " + word, "success");
         } catch (error) {
@@ -142,7 +138,6 @@ export default function ApplicationDetail() {
                         <div className="ph-actions">
                             {previewUrl && (
                                 <>
-                                    {/* download 按钮仍然可用：浏览器会直接下载或打开另存为 */}
                                     <a className="btn primary small" href={previewUrl} download>
                                         download resume
                                     </a>
@@ -154,19 +149,13 @@ export default function ApplicationDetail() {
                     <div className="preview-pane" aria-label="Resume preview">
                         {!previewUrl && <div className="muted">No Document</div>}
 
-                        {previewUrl && fileKind === "pdf" && (
+                        {
                             <iframe
                                 title="resume-pdf"
                                 src={`${previewUrl}#toolbar=1&navpanes=0`}
                                 style={{ width: "100%", height: "100%", border: 0 }}
                             />
-                        )}
-
-                        {previewUrl && fileKind === "image" && (
-                            <div className="img-box">
-                                <img src={previewUrl} alt="Resume Image" />
-                            </div>
-                        )}
+                        }
 
                         {previewUrl && fileKind === "other" && (
                             <div className="muted">

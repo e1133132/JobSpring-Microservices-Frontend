@@ -20,7 +20,7 @@ export default function JobDetail() {
     useEffect(() => {
         const fetchJob = async () => {
             try {
-                const response = await api.get('/api/job_seeker/job_list');
+                const response = await api.get('/api/job/job_list');
                 const jobs = response.data.content;
                 const found = jobs.find((j) => String(j.id) === String(id));
                 setJob(found);
@@ -33,7 +33,7 @@ export default function JobDetail() {
             try {
                 const token = localStorage.getItem("jobspring_token");
                 if (!token) return;
-                const res = await api.get(`/api/job_favorites/${id}/is-favorited`, {
+                const res = await api.get(`/api/job/job_favorites/${id}/is-favorited`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(res.data === true);
@@ -46,7 +46,7 @@ export default function JobDetail() {
             try {
                 const token = localStorage.getItem("jobspring_token");
                 if (!token) return;
-                const res = await api.get("/api/profile", {
+                const res = await api.get("/api/user/profile", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setProfile(res.data);
@@ -110,13 +110,12 @@ export default function JobDetail() {
                 console.log(key, value);
             }
 
-            const res = await api.post(`/api/applications/${id}/applications`, formData, );
+            const res = await api.post(`/api/application/applications/${id}/applications`, formData );
             const data = res.data;
             console.log("Response:", data);
             if (data?.publicId) {
                 console.log("ID:", data.publicId);
 
-                // localStorage.setItem("public_id", data.publicId);
                 alert(`Apply successfully!`);
             } else {
                 alert("Apply Successfully!");

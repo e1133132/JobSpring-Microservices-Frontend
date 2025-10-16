@@ -116,7 +116,8 @@ export default function CheckApplication() {
             Showing {filtered?.length ?? 0} result{(filtered?.length ?? 0) === 1 ? "" : "s"}
           </div>
 
-          <div className="grid">
+          <div className="grid" style={{display:'flex', flexDirection:'column', gap:13}}>
+
             {filtered?.length === 0 && <div className="muted">No applications found.</div>}
 
             {filtered?.map((a) => (
