@@ -20,7 +20,7 @@ export default function AdminDashboard() {
 
   const fetchJobStatus = async () => {
     try {
-      const response = await api.get('/api/admin/status');
+      const response = await api.get('/api/job/status');
       setJobs(response.data);
       console.log('Fetched jobs:', response.data);
     } catch (error) {
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
     if (locking.has(jobId)) return;
     setLocking(prev => new Set(prev).add(jobId));
     try {
-      await api.post(`/api/admin/companies/${companyId}/jobs/${jobId}/invalid`);
+      await api.post(`/api/job/companies/${companyId}/jobs/${jobId}/invalid`);
       setJobs(prev => prev.map(j => j.jobId === jobId ? { ...jobId, status: 1 } : j));
     } catch (error) {
       if (error.response) {

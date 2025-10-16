@@ -20,7 +20,7 @@ export default function JobDetail() {
     useEffect(() => {
         const fetchJob = async () => {
             try {
-                const response = await api.get('/api/job_seeker/job_list');
+                const response = await api.get('/api/job/job_list');
                 const jobs = response.data.content;
                 const found = jobs.find((j) => String(j.id) === String(id));
                 setJob(found);
@@ -33,7 +33,7 @@ export default function JobDetail() {
             try {
                 const token = localStorage.getItem("jobspring_token");
                 if (!token) return;
-                const res = await api.get(`/api/job_favorites/${id}/is-favorited`, {
+                const res = await api.get(`/api/user/job_favorites/${id}/is-favorited`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(res.data === true);
@@ -137,13 +137,13 @@ export default function JobDetail() {
                 return;
             }
             if (isFavorited) {
-                await api.delete(`/api/job_favorites/${id}`, {
+                await api.delete(`/api/user/job_favorites/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(false);
                 alert(`Removed from favorites: ${job.title}`);
             } else {
-                await api.post(`/api/job_favorites/${id}`, {}, {
+                await api.post(`/api/user/job_favorites/${id}`, {}, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(true);
