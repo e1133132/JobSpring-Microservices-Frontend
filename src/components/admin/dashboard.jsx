@@ -20,7 +20,7 @@ export default function AdminDashboard() {
 
   const fetchJobStatus = async () => {
     try {
-      const response = await api.get('/api/admin/status');
+      const response = await api.get('/api/job/status');
       setJobs(response.data);
       console.log('Fetched jobs:', response.data);
     } catch (error) {
