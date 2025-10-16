@@ -46,7 +46,7 @@ export default function Apply_progress() {
     const fetchApplications = async () => {
       try {
         const token = localStorage.getItem("jobspring_token");
-        const res = await api.get("/api/job_seeker/applications", {
+        const res = await api.get("/api/application/getApplications", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const list = res.data.content || [];
@@ -73,7 +73,7 @@ export default function Apply_progress() {
     const fetchSaved = async () => {
       try {
         const token = localStorage.getItem("jobspring_token");
-        const res = await axios.get("/api/job_favorites", {
+        const res = await axios.get("/api/user/job_favorites", {
           headers: { Authorization: `Bearer ${token}` },
           params: { page: 0, size: 50 }
         });
