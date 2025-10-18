@@ -42,7 +42,7 @@ export default function Profile() {
                 const response = await api.get("/api/user/profile", {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
+                        Authorization: `Bearer ${token}`
                     }
                 });
 
@@ -88,7 +88,7 @@ export default function Profile() {
                 const response = await api.get("/api/user/skills", {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
+                        Authorization: `Bearer ${token}`
                     }
                 });
                 setSkillsList(response.data);
@@ -164,7 +164,7 @@ export default function Profile() {
             const response = await api.post("/api/user/profile", payload, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    Authorization: `Bearer ${token}`
                 },
             });
 
