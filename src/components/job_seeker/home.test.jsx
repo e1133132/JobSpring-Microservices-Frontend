@@ -60,9 +60,9 @@ beforeEach(() => {
 
 function renderHome() {
   return render(
-    <MemoryRouter>
-      <Home />
-    </MemoryRouter>
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
   );
 }
 
