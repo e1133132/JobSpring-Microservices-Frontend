@@ -117,7 +117,7 @@ test('toggling favorite adds/removes via API and updates UI', async () => {
   const second = await screen.findByRole('article', { name: /Data Analyst at Beta/i });
   const fav2 = within(second).getAllByRole('button')[1];
 
-  // 收藏
+
   api.post.mockResolvedValue({ data: {} });
   await userEvent.click(fav2);
   expect(api.post).toHaveBeenCalledWith('/api/favorites/2', {}, {
