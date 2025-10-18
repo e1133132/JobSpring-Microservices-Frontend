@@ -37,7 +37,7 @@ export default function ProfileHR() {
             const res = await api.get("/api/user/hr/company-name", {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
