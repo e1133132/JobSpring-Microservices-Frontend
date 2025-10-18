@@ -37,7 +37,7 @@ export default function CheckApplication() {
 
   async function fetchApplications() {
     try {
-      const res = await api.get("/api/hr/applications", { params: { page: 0, size: 50 } });
+      const res = await api.get("/api/application/applications", { params: { page: 0, size: 50 } });
       const payload = res.data;
       const list = Array.isArray(payload) ? payload : payload?.content ?? [];
       setApps(list ?? []);
@@ -116,7 +116,8 @@ export default function CheckApplication() {
             Showing {filtered?.length ?? 0} result{(filtered?.length ?? 0) === 1 ? "" : "s"}
           </div>
 
-          <div className="grid">
+          <div className="grid" style={{display:'flex', flexDirection:'column', gap:13}}>
+
             {filtered?.length === 0 && <div className="muted">No applications found.</div>}
 
             {filtered?.map((a) => (
