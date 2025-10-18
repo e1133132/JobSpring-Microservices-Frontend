@@ -47,8 +47,8 @@ beforeEach(() => {
 
   // 首屏：/job_list -> /favorites
   api.get.mockImplementation((url) => {
-    if (url === '/api/job/job_list') return Promise.resolve({ data: { content: jobs } });
-    if (url === '/api/user/favorites')          return Promise.resolve({ data: { content: [{ jobId: 1 }] } });
+    if (url === '/api/job_seeker/job_list') return Promise.resolve({ data: { content: jobs } });
+    if (url === '/api/favorites')          return Promise.resolve({ data: { content: [{ jobId: 1 }] } });
     return Promise.resolve({ data: {} });
   });
 
@@ -60,9 +60,9 @@ beforeEach(() => {
 
 function renderHome() {
   return render(
-    <MemoryRouter>
-      <Home />
-    </MemoryRouter>
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
   );
 }
 
@@ -92,7 +92,7 @@ test('search calls /job_list/search and updates list', async () => {
   await userEvent.type(searchInput, 'data');
   await userEvent.click(screen.getByRole('button', { name: /search/i }));
 
-  expect(axios.get).toHaveBeenCalledWith('/api/job/job_list/search', {
+  expect(axios.get).toHaveBeenCalledWith('/api/job_seeker/job_list/search', {
     params: { keyword: 'data', page: 0, size: 50 },
   });
 

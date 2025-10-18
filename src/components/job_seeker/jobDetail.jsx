@@ -46,7 +46,7 @@ export default function JobDetail() {
             try {
                 const token = localStorage.getItem("jobspring_token");
                 if (!token) return;
-                const res = await api.get("/api/profile", {
+                const res = await api.get("/api/user/profile", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setProfile(res.data);
@@ -110,7 +110,7 @@ export default function JobDetail() {
                 console.log(key, value);
             }
 
-            const res = await api.post(`/api/applications/${id}/applications`, formData, );
+            const res = await api.post(`/api/application/applications/${id}/applications`, formData, );
             const data = res.data;
             console.log("Response:", data);
             if (data?.publicId) {
