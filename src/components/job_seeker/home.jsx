@@ -37,7 +37,7 @@ export default function Home() {
   const fetchFavorites = async () => {
     try {
       const token = localStorage.getItem("jobspring_token");
-      const res = await api.get("/api/job/job_favorites", {
+      const res = await api.get("/api/user/job_favorites", {
         headers: { Authorization: `Bearer ${token}` },
         params: { page: 0, size: 100 } 
       });
@@ -69,7 +69,7 @@ export default function Home() {
       return;
     }
     try {
-      const res = await axios.get("/api/job/job_seeker/job_list/search", {
+      const res = await axios.get("/api/job/job_list/search", {
         params: { keyword: query, page: 0, size: 50 },
       });
       let list = res.data.content ?? [];
@@ -91,7 +91,7 @@ export default function Home() {
     try {
       const token = localStorage.getItem("jobspring_token");
       if (favoriteIds.has(jobId)) {
-        await api.delete(`/api/job/job_favorites/${jobId}`, {
+        await api.delete(`/api/user/job_favorites/${jobId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFavoriteIds(prev => {
@@ -101,7 +101,7 @@ export default function Home() {
         });
         alert(`Saved job: ${jobTitle} has been canceled!`)
       } else {
-        await api.post(`/api/job/job_favorites/${jobId}`, {}, {
+        await api.post(`/api/user/job_favorites/${jobId}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFavoriteIds(prev => new Set(prev).add(jobId));
