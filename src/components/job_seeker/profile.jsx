@@ -23,18 +23,17 @@ export default function Profile() {
     });
     const [role,] = useState(getCurrentUser() ? getCurrentUser().role : 'guest');
     const [name,] = useState(getCurrentUser() ? getCurrentUser().fullName : 'guest');
-    // 日期单独 state（存储为 Date 对象）
+
     const [startDateSchool, setStartDateSchool] = useState(null);
     const [endDateSchool, setEndDateSchool] = useState(null);
     const [startDateWork, setStartDateWork] = useState(null);
     const [endDateWork, setEndDateWork] = useState(null);
-    // select 单独 state
+
     const [visibility, setVisibility] = useState("2");
     const [level, setLevel] = useState("3");
     const [skillsList, setSkillsList] = useState([]);
     const navigate = useNavigate();
 
-    // 初始化时请求后端数据
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -48,7 +47,6 @@ export default function Profile() {
 
                 const data = response.data;
 
-                // 填充表单数据
                 setForm({
                     summary: data.profile?.summary ?? "",
                     school: data.education?.[0]?.school ?? "",
@@ -63,13 +61,11 @@ export default function Profile() {
                     skillYears: data.skills?.[0]?.years?.toString() ?? "",
                 });
 
-                // 日期转为 Date 对象
                 setStartDateSchool(data.education?.[0]?.start_date ? new Date(data.education[0].start_date) : null);
                 setEndDateSchool(data.education?.[0]?.end_date ? new Date(data.education[0].end_date) : null);
                 setStartDateWork(data.experience?.[0]?.start_date ? new Date(data.experience[0].start_date) : null);
                 setEndDateWork(data.experience?.[0]?.end_date ? new Date(data.experience[0].end_date) : null);
 
-                // 下拉选择框
                 setVisibility(data.profile?.visibility?.toString() || "2");
                 setLevel(data.skills?.[0]?.level?.toString() || "3");
             } catch (error) {
@@ -79,7 +75,6 @@ export default function Profile() {
 
         fetchProfile();
     }, []);
-
 
     useEffect(() => {
         const fetchSkills = async () => {
@@ -121,7 +116,6 @@ export default function Profile() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 构造请求体
         const payload = {
             profile: {
                 summary: form.summary,
@@ -182,8 +176,6 @@ export default function Profile() {
             <Navigation role={role} username={name}/>
 
             <p className="subheading">YOUR PROFILE DETAILS</p>
-
-            {/* 表单内容 */}
 
             <form
                 className="card"
@@ -389,7 +381,6 @@ export default function Profile() {
                         placeholder="e.g. 2.5"
                     />
                 </div>
-
 
                 <div>
                     <button
