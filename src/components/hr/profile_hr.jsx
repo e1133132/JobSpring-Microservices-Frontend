@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "../../App.css";
-import axios from "axios";
 import { getCurrentUser } from "../../services/authService";
 import Navigation from "../navigation.jsx";
 import {useNavigate} from "react-router-dom";
+import api from "../../services/api.js";
 
 export default function ProfileHR() {
     const navigate = useNavigate();
@@ -34,10 +34,10 @@ export default function ProfileHR() {
                 return;
             }
 
-            const res = await axios.get("/api/user/hr/company-name", {
+            const res = await api.get("/api/user/hr/company-name", {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
 

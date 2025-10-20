@@ -33,7 +33,7 @@ export default function JobDetail() {
             try {
                 const token = localStorage.getItem("jobspring_token");
                 if (!token) return;
-                const res = await api.get(`/api/job/job_favorites/${id}/is-favorited`, {
+                const res = await api.get(`/api/user/job_favorites/${id}/is-favorited`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(res.data === true);
@@ -110,12 +110,13 @@ export default function JobDetail() {
                 console.log(key, value);
             }
 
-            const res = await api.post(`/api/application/applications/${id}/applications`, formData );
+            const res = await api.post(`/api/application/applications/${id}/applications`, formData, );
             const data = res.data;
             console.log("Response:", data);
             if (data?.publicId) {
                 console.log("ID:", data.publicId);
 
+                // localStorage.setItem("public_id", data.publicId);
                 alert(`Apply successfully!`);
             } else {
                 alert("Apply Successfully!");
@@ -136,13 +137,13 @@ export default function JobDetail() {
                 return;
             }
             if (isFavorited) {
-                await api.delete(`/api/job_favorites/${id}`, {
+                await api.delete(`/api/user/job_favorites/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(false);
                 alert(`Removed from favorites: ${job.title}`);
             } else {
-                await api.post(`/api/job_favorites/${id}`, {}, {
+                await api.post(`/api/user/job_favorites/${id}`, {}, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setIsFavorited(true);

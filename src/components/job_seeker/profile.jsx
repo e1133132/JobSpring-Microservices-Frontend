@@ -2,10 +2,10 @@ import React, {useEffect, useState} from "react";
 import "../../App.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import axios from "axios";
 import {getCurrentUser} from "../../services/authService";
 import Navigation from "../navigation.jsx";
 import {useNavigate} from "react-router-dom";
+import api from "../../services/api.js";
 
 export default function Profile() {
     const [form, setForm] = useState({
@@ -39,10 +39,10 @@ export default function Profile() {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem("jobspring_token");
-                const response = await axios.get("/api/user/profile", {
+                const response = await api.get("/api/user/profile", {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
+                        Authorization: `Bearer ${token}`
                     }
                 });
 
@@ -85,10 +85,10 @@ export default function Profile() {
         const fetchSkills = async () => {
             try {
                 const token = localStorage.getItem("jobspring_token");
-                const response = await axios.get("/api/user/skills", {
+                const response = await api.get("/api/user/skills", {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
+                        Authorization: `Bearer ${token}`
                     }
                 });
                 setSkillsList(response.data);
@@ -161,10 +161,10 @@ export default function Profile() {
 
         try {
             const token = localStorage.getItem("jobspring_token");
-            const response = await axios.post("/api/user/profile", payload, {
+            const response = await api.post("/api/user/profile", payload, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    Authorization: `Bearer ${token}`
                 },
             });
 
