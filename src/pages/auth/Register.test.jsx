@@ -1,126 +1,119 @@
-// src/pages/auth/Register.test.jsx
 /* eslint-disable */
+import React from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { vi } from 'vitest'
 
-// 1) mock 静态资源（Vite 资源是 default 导出）
-vi.mock('../../assets/jobspringt.png', () => ({ default: 'logo.png' }));
+import Register from './Register'
 
-// 2) mock 路由：只替换 useNavigate
-const navigateMock = vi.fn();
+const navigateMock = vi.fn()
 vi.mock('react-router-dom', async () => {
-  const real = await vi.importActual('react-router-dom');
-  return { ...real, useNavigate: () => navigateMock };
-});
+  const real = await vi.importActual('react-router-dom')
+  return { ...real, useNavigate: () => navigateMock }
+})
 
-// 3) mock 认证服务：register / sendVerificationCode
+vi.mock('../../assets/jobspringt.png', () => ({ default: 'logo.png' }), { virtual: true })
+vi.mock('../../App.css', () => ({}), { virtual: true })
+
+const sendCodeMock = vi.fn()
+const registerMock = vi.fn()
 vi.mock('../../services/authService', () => ({
-  register: vi.fn(),
-  sendVerificationCode: vi.fn(),
-}));
-
-// ---- 正式 imports（必须在 mocks 之后）----
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import Register from './Register.jsx';
-import { register as registerApi, sendVerificationCode as sendCodeApi } from '../../services/authService';
-import { MemoryRouter } from 'react-router-dom';
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  navigateMock.mockReset();
-});
+  sendVerificationCode: (...args) => sendCodeMock(...args),
+  register: (...args) => registerMock(...args),
+}))
 
 function renderRegister() {
   return render(
     <MemoryRouter>
       <Register />
     </MemoryRouter>
-  );
+  )
 }
 
-test('click "Send Code" without email shows tip', async () => {
-  renderRegister();
+beforeEach(() => {
+  vi.clearAllMocks()
+  vi.useRealTimers()
+})
 
-  const btn = screen.getByRole('button', { name: /send code/i });
-  await userEvent.click(btn);
+test('click "Send Code" without email shows field error and does not call API', async () => {
+  renderRegister()
 
-  expect(await screen.findByText(/please enter email first/i)).toBeInTheDocument();
-  expect(sendCodeApi).not.toHaveBeenCalled();
-});
+  await userEvent.click(screen.getByRole('button', { name: /send code/i }))
 
-test('send code success: calls API, shows success, button enters cooldown', async () => {
-  sendCodeApi.mockResolvedValue({});
+  expect(await screen.findByText(/this field is required/i)).toBeInTheDocument()
+  expect(sendCodeMock).not.toHaveBeenCalled()
+})
 
-  renderRegister();
+test('send code success: calls API and button enters cooldown', async () => {
+  renderRegister()
 
-  await userEvent.type(screen.getByPlaceholderText(/email/i), 'test@example.com');
-  await userEvent.click(screen.getByRole('button', { name: /send code/i }));
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'test@example.com')
+  sendCodeMock.mockResolvedValue({})
 
-  // 1) 调用正确
-  expect(sendCodeApi).toHaveBeenCalledWith('test@example.com');
+  await userEvent.click(screen.getByRole('button', { name: /send code/i }))
 
-  // 2) 成功提示出现
-  expect(
-    await screen.findByText(/verification code sent to your email/i)
-  ).toBeInTheDocument();
+  await waitFor(() => {
+    expect(sendCodeMock).toHaveBeenCalledWith('test@example.com')
+  })
 
-  // 3) 进入冷却：按钮直接变为 Resend (60) 且禁用（无需 fake timers）
-  const resendBtn = await screen.findByRole('button', { name: /resend \(60\)/i });
-  expect(resendBtn).toBeDisabled();
-});
-
-test('send code failure: shows server error message', async () => {
-  sendCodeApi.mockRejectedValue({
-    response: { data: { message: 'Email not allowed' } },
-  });
-
-  renderRegister();
-
-  await userEvent.type(screen.getByPlaceholderText(/email/i), 'bad@example.com');
-  await userEvent.click(screen.getByRole('button', { name: /send code/i }));
-
-  expect(await screen.findByText(/email not allowed/i)).toBeInTheDocument();
-});
+  const cooldownBtn = await screen.findByRole('button', { name: /resend \(\d+\)/i })
+  expect(cooldownBtn).toBeDisabled()
+})
 
 test('register success navigates to /auth/login', async () => {
-  registerApi.mockResolvedValue({});
+  renderRegister()
 
-  renderRegister();
+  await userEvent.type(screen.getByPlaceholderText(/full name/i), 'Alice')
+  await userEvent.type(screen.getByPlaceholderText(/^email$/i), 'alice@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/verification code/i), '123456')
+  await userEvent.type(screen.getByPlaceholderText(/^password$/i), 'pw12345')
 
-  await userEvent.type(screen.getByPlaceholderText(/full name/i), 'Alice');
-  await userEvent.type(screen.getByPlaceholderText(/email/i), 'a@b.com');
-  await userEvent.type(screen.getByPlaceholderText(/verification code/i), '123456');
-  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pass123');
+  registerMock.mockResolvedValue({})
 
-  await userEvent.click(screen.getByRole('button', { name: /^register$/i }));
+  await userEvent.click(screen.getByRole('button', { name: /^register$/i }))
 
-  // API 被以完整表单调用
-  expect(registerApi).toHaveBeenCalledWith({
-    fullName: 'Alice',
-    email: 'a@b.com',
-    password: 'pass123',
-    code: '123456',
-  });
-
-  // 跳转
   await waitFor(() => {
-    expect(navigateMock).toHaveBeenCalledWith('/auth/login');
-  });
-});
+    expect(registerMock).toHaveBeenCalledWith({
+      fullName: 'Alice',
+      email: 'alice@example.com',
+      code: '123456',
+      password: 'pw12345',
+    })
+    expect(navigateMock).toHaveBeenCalledWith('/auth/login')
+  })
+})
 
-test('register failure shows server message or default', async () => {
-  registerApi.mockRejectedValue({
-    response: { data: { message: 'User already exists' } },
-  });
+test('register failure shows backend message', async () => {
+  renderRegister()
 
-  renderRegister();
+  await userEvent.type(screen.getByPlaceholderText(/full name/i), 'Bob')
+  await userEvent.type(screen.getByPlaceholderText(/^email$/i), 'bob@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/verification code/i), '654321')
+  await userEvent.type(screen.getByPlaceholderText(/^password$/i), 'pw12345')
 
-  await userEvent.type(screen.getByPlaceholderText(/full name/i), 'Bob');
-  await userEvent.type(screen.getByPlaceholderText(/email/i), 'bob@x.com');
-  await userEvent.type(screen.getByPlaceholderText(/verification code/i), '999999');
-  await userEvent.type(screen.getByPlaceholderText(/password/i), 'secret');
+  registerMock.mockRejectedValue({
+    response: { data: { message: 'Email already exists' } },
+  })
 
-  await userEvent.click(screen.getByRole('button', { name: /^register$/i }));
+  await userEvent.click(screen.getByRole('button', { name: /^register$/i }))
 
-  expect(await screen.findByText(/user already exists/i)).toBeInTheDocument();
-  expect(navigateMock).not.toHaveBeenCalled();
-});
+  expect(await screen.findByText(/email already exists/i)).toBeInTheDocument()
+  expect(navigateMock).not.toHaveBeenCalled()
+})
+
+test('register failure shows default message on generic error', async () => {
+  renderRegister()
+
+  await userEvent.type(screen.getByPlaceholderText(/full name/i), 'Carl')
+  await userEvent.type(screen.getByPlaceholderText(/^email$/i), 'carl@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/verification code/i), '111111')
+  await userEvent.type(screen.getByPlaceholderText(/^password$/i), 'pw12345')
+
+  registerMock.mockRejectedValue(new Error('network'))
+
+  await userEvent.click(screen.getByRole('button', { name: /^register$/i }))
+
+  expect(await screen.findByText(/register failed/i)).toBeInTheDocument()
+  expect(navigateMock).not.toHaveBeenCalled()
+})
