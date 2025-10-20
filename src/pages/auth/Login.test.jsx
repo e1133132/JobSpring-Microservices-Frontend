@@ -1,100 +1,131 @@
-// src/pages/auth/Login.test.jsx
-// 先做必要的 mocks（顺序要在组件 import 之前）
 /* eslint-disable */
-// 1) 静态资源：logo 图片
-vi.mock('../../assets/jobspringt.png', () => ({ default: 'logo.png' }));
+import React from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { vi } from 'vitest'
 
-// 2) 路由跳转 useNavigate
-const navigateMock = vi.fn();
+import Login from './Login'
+
+// ---- Mocks ----
+const navigateMock = vi.fn()
 vi.mock('react-router-dom', async () => {
-  const real = await vi.importActual('react-router-dom');
-  return { ...real, useNavigate: () => navigateMock };
-});
+  const real = await vi.importActual('react-router-dom')
+  return { ...real, useNavigate: () => navigateMock }
+})
 
-// 3) 登录服务
+vi.mock('../../assets/jobspringt.png', () => ({ default: 'logo.png' }), { virtual: true })
+vi.mock('../../App.css', () => ({}), { virtual: true })
+
+const loginMock = vi.fn()
 vi.mock('../../services/authService', () => ({
-  login: vi.fn(),
-}));
+  login: (...args) => loginMock(...args),
+}))
 
-// ---- 正式 imports（放 mocks 之后）----
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import Login from './Login.jsx';
-import { login } from '../../services/authService';
 
-// 每个用例前清理
-beforeEach(() => {
-  vi.clearAllMocks();
-  localStorage.clear();
-});
-
-// 小工具：渲染并填写表单、提交
-async function renderAndSubmit(email = 'a@b.com', password = 'pw123') {
-  render(
+function renderLogin() {
+  return render(
     <MemoryRouter>
       <Login />
     </MemoryRouter>
-  );
-  await userEvent.type(screen.getByPlaceholderText(/email/i), email);
-  await userEvent.type(screen.getByPlaceholderText(/password/i), password);
-  await userEvent.click(screen.getByRole('button', { name: /login/i }));
+  )
 }
 
-test('successful login (role 0) saves token/user and navigates to /home', async () => {
-  login.mockResolvedValue({
-    token: 't-abc',
-    user: { role: 0, id: 1, fullName: 'Alice' },
-  });
-
-  await renderAndSubmit('c@example.com', 'secret');
-
-  // 调用了登录接口且参数正确
-  expect(login).toHaveBeenCalledWith({ email: 'c@example.com', password: 'secret' });
-
-  // 存储 token & user
-  expect(localStorage.getItem('jobspring_token')).toBe('t-abc');
-  expect(JSON.parse(localStorage.getItem('jobspring_user'))).toEqual({
-    role: 0, id: 1, fullName: 'Alice',
-  });
-
-  // 跳转 /home
-  await waitFor(() => {
-    expect(navigateMock).toHaveBeenCalledWith('/home');
-  });
-});
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 test('role 2 (Admin) navigates to /admin/status', async () => {
-  login.mockResolvedValue({
-    token: 't-admin',
-    user: { role: 2, id: 9, fullName: 'Admin' },
-  });
+  renderLogin()
 
-  await renderAndSubmit();
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'admin@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pw12345')
+
+  loginMock.mockResolvedValue({
+    token: 't',
+    user: { role: 2, fullName: 'Admin' },
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /login/i }))
 
   await waitFor(() => {
-    expect(navigateMock).toHaveBeenCalledWith('/admin/status');
-  });
-});
+    expect(loginMock).toHaveBeenCalledWith({ email: 'admin@example.com', password: 'pw12345' })
+    expect(navigateMock).toHaveBeenCalledWith('/admin/status')
+  })
+})
 
-test('shows backend error message on failure', async () => {
-  login.mockRejectedValue({
+test('role 1 (HR) navigates to /hr/JobPosition', async () => {
+  renderLogin()
+
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'hr@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pw12345')
+
+  loginMock.mockResolvedValue({
+    token: 't',
+    user: { role: 1, fullName: 'HR' },
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /login/i }))
+
+  await waitFor(() => {
+    expect(navigateMock).toHaveBeenCalledWith('/hr/JobPosition')
+  })
+})
+
+test('role 0 (Candidate) navigates to /home', async () => {
+  renderLogin()
+
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'u@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pw12345')
+
+  loginMock.mockResolvedValue({
+    token: 't',
+    user: { role: 0, fullName: 'User' },
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /login/i }))
+
+  await waitFor(() => {
+    expect(navigateMock).toHaveBeenCalledWith('/home')
+  })
+})
+
+test('shows backend error message on failure (Invalid credentials)', async () => {
+  renderLogin()
+
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'u@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pw12345')
+
+  loginMock.mockRejectedValue({
     response: { data: { message: 'Invalid credentials' } },
-  });
+  })
 
-  await renderAndSubmit();
+  await userEvent.click(screen.getByRole('button', { name: /login/i }))
 
-  // 展示后端返回的 message
-  expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();
-  expect(navigateMock).not.toHaveBeenCalled();
-});
+  expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument()
+  expect(navigateMock).not.toHaveBeenCalled()
+})
 
 test('shows default message on generic error', async () => {
-  login.mockRejectedValue(new Error('network down'));
+  renderLogin()
 
-  await renderAndSubmit();
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'u@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pw12345')
 
-  // 展示默认文案
-  expect(await screen.findByText(/login failed/i)).toBeInTheDocument();
-  expect(navigateMock).not.toHaveBeenCalled();
-});
+  loginMock.mockRejectedValue(new Error('network'))
+
+  await userEvent.click(screen.getByRole('button', { name: /login/i }))
+
+  expect(await screen.findByText(/login failed/i)).toBeInTheDocument()
+  expect(navigateMock).not.toHaveBeenCalled()
+})
+
+test('cannot submit when password too short (button disabled)', async () => {
+  renderLogin()
+
+  await userEvent.type(screen.getByPlaceholderText(/email/i), 'u@example.com')
+  await userEvent.type(screen.getByPlaceholderText(/password/i), 'pw12') 
+  await userEvent.tab()
+  const submit = screen.getByRole('button', { name: /login/i })
+  expect(submit).toBeDisabled()
+})

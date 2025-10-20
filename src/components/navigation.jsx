@@ -31,7 +31,6 @@ function buildTopMenus(role) {
       { key: "jobs", label: "manage job position", to: "/admin/status" },
       { key: "createHR", label: "create HR account", to: "/admin/create/hr" },
       { key: "createCompany", label: "create Company", to: "/admin/create/company" },
-      { key: "audit", label: "Audit review", to: "/admin/audit" },
       { key: "logout", label: "Logout", action: "logoutAdmin" },
     ];
   }
