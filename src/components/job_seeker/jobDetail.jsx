@@ -60,7 +60,6 @@ export default function JobDetail() {
         fetchProfile();
     }, [id]);
 
-
     if (!job) return <div className="section">Job not found.</div>;
 
     const rawType = job.employment_type || job.employmentType;
@@ -116,7 +115,6 @@ export default function JobDetail() {
             if (data?.publicId) {
                 console.log("ID:", data.publicId);
 
-                // localStorage.setItem("public_id", data.publicId);
                 alert(`Apply successfully!`);
             } else {
                 alert("Apply Successfully!");
@@ -172,7 +170,6 @@ export default function JobDetail() {
                     flexWrap: "wrap"
                 }}
             >
-                {/* 左边 */}
                 <div style={{ flex: "2 1 600px", minWidth: "300px" }}>
                     <article className="card" style={{ padding: "24px" }}>
                         <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "12px" }}>
@@ -194,6 +191,7 @@ export default function JobDetail() {
                         <div className="cta" style={{marginTop: "20px"}}>
                             <button className="btn" onClick={() => setShowUpload(true)}>Apply Now</button>
                             <button
+                                data-testid="fav-btn"
                                 className="tab-btn ghost"
                                 onClick={toggleFavorite}
                                 style={{fontSize: "20px", color: isFavorited ? "#fbbf24" : "#6b7280"}}
@@ -204,7 +202,6 @@ export default function JobDetail() {
                     </article>
                 </div>
 
-                {/* 右边 */}
                 <div style={{flex: "1 1 300px", minWidth: "260px"}}>
                     <article className="card" style={{padding: "20px"}}>
                         <h3 style={{marginBottom: "10px"}}>Company Info</h3>
@@ -245,6 +242,7 @@ export default function JobDetail() {
                     >
                         <h3>Upload Resume (PDF)</h3>
                         <input
+                            data-testid="resume-input"
                             type="file"
                             accept="application/pdf"
                             onChange={(e) => setSelectedFile(e.target.files[0])}
@@ -257,7 +255,6 @@ export default function JobDetail() {
                     </div>
                 </div>
             )}
-
 
             <style>{`
         *{box-sizing:border-box}
