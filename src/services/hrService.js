@@ -6,7 +6,7 @@ export async function getCompanyId() {
     if (!user || !user.id) {
         throw new Error('User not logged in');
     }
-
-    const {data} = await api.get('/api/user/hr/${userId}/company-id');
+    const userId = user.id;
+    const {data} = await api.get(`/api/user/hr/${userId}/company-id`);
     return data.companyId;
 }
