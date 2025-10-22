@@ -3,7 +3,6 @@ import api from "../../services/api.js";
 import { getCurrentUser } from "../../services/authService";
 import Navigation from "../navigation.jsx";
 
-
 export default function AdminDashboard() {
   const [jobs, setJobs] = useState([]);
   const [q, setQ] = useState("");

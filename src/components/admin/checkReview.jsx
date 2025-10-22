@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 export default function CheckReview() {
     const [reviews, setReviews] = useState([]);
     const [q, setQ] = useState("");
-    const [filter, setFilter] = useState("all"); // all | approved | rejected | pending
+    const [filter, setFilter] = useState("all"); 
     const [role] = useState(getCurrentUser() ? getCurrentUser().role : "guest");
     const [name] = useState(getCurrentUser() ? getCurrentUser().fullName : "guest");
     const [pending, setPending] = React.useState({});
@@ -41,8 +41,8 @@ export default function CheckReview() {
         return "rejected";
     };
     const statusClass = (s) => {
-        if (s === 1) return "approved";
-        if (s === 2) return "invalid";
+        if (s === 1) return "passed";
+        if (s === 2) return "rejected";
         return "pending";
     };
 
@@ -67,7 +67,7 @@ export default function CheckReview() {
     async function passReview(review) {
         const id = review.id;
         setPending((s) => ({ ...s, [id]: true }));
-        setDecided((s) => ({ ...s, [id]: "approved" }));
+        setDecided((s) => ({ ...s, [id]: "passed" }));
         try {
             await api.post(`/api/admin/review/pass/${id}`, {
                 note: note ?? ""
@@ -140,7 +140,7 @@ export default function CheckReview() {
                         aria-label="Status filter"
                     >
                         <option value="all">All</option>
-                        <option value="approved">Approved</option>
+                        <option value="passed">Passed</option>
                         <option value="rejected">Rejected</option>
                         <option value="pending">Pending</option>
                     </select>
@@ -164,7 +164,7 @@ export default function CheckReview() {
                         {filtered?.map((r) => {
                             const st = statusText(r.status);
                             const isDisabled = !!(pending[r.id] || decided[r.id]);
-                            const busyPass = pending[r.id] && decided[r.id] === "approved";
+                            const busyPass = pending[r.id] && decided[r.id] === "passed";
                             const busyReject = pending[r.id] && decided[r.id] === "rejected";
 
                             return (
@@ -267,8 +267,8 @@ export default function CheckReview() {
           .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
           .name{ font-weight:800; }
           .pill{ font-size:12px; padding:6px 8px; border-radius:999px; border:1px solid var(--border); color:#334155; background:#fff; }
-          .pill.invalid{ border-color: rgba(248,113,113,.45); color:#991b1b; background:#fff1f2; }    /* rejected */
-          .pill.approved{ border-color: rgba(34,197,94,.45); color:#065f46; background:rgba(34,197,94,.08); }
+          .pill.rejected{ border-color: rgba(248,113,113,.45); color:#991b1b; background:#fff1f2; }    /* rejected */
+          .pill.passed{ border-color: rgba(34,197,94,.45); color:#065f46; background:rgba(34,197,94,.08); }
           .pill.pending{ border-color: rgba(59,130,246,.35); color:#1e3a8a; background: rgba(191,219,254,.35); }
           .actions{ display:flex; gap:8px; }
           .danger{ background:#ef4444; color:#0b1220; font-weight:800; }

@@ -112,7 +112,6 @@ export default function Apply_progress() {
             })}
           </div>
 
-          {/* 列表 */}
           <div className="list">
             {active === "saved" ? (
                 savedJobs.length === 0 ? (
