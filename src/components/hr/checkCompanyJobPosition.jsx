@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "../navigation.jsx";
-import { FaArrowLeft, FaSync } from "react-icons/fa";
+import { FaSync } from "react-icons/fa";
 import api from "../../services/api.js";
 import { getCurrentUser } from "../../services/authService";
 
