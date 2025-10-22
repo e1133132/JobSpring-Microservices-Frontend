@@ -7,6 +7,6 @@ export async function getCompanyId() {
         throw new Error('User not logged in');
     }
     const userId = user.id;
-    const {data} = await api.get(`/api/user/hr/${userId}/company-id`);
+    const {data} = await api.get(`/api/company/hr/${userId}/company-id`);
     return data.companyId;
 }
