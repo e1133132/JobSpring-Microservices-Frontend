@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navigation from "../navigation.jsx";
 import { FaArrowLeft } from "react-icons/fa";
@@ -32,7 +32,6 @@ export default function ApplicationDetail() {
     const [updating] = useState(false);
     const [, setError] = useState("");
     const [previewUrl, setPreviewUrl] = useState("");
-    const [resumeFileId,] = useState("");
 
     useEffect(() => {
         load();
@@ -53,19 +52,6 @@ export default function ApplicationDetail() {
             setLoading(false);
         }
     }
-
-
-    const legacyResumeUrl = data?.resumeUrl || "";
-
-    const fileKind = useMemo(() => {
-        if (resumeFileId) return "pdf";
-        if (!legacyResumeUrl) return "none";
-        const lower = legacyResumeUrl.split("?")[0].toLowerCase();
-        if (lower.endsWith(".pdf") || legacyResumeUrl.startsWith("data:application/pdf")) return "pdf";
-        if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lower)) return "image";
-        return "other";
-    }, [resumeFileId, legacyResumeUrl]);
-
 
 
     const statusInfo = STATUS_MAP[data?.status ?? 0] ?? STATUS_MAP[0];
@@ -98,7 +84,7 @@ export default function ApplicationDetail() {
         <div className="app-root">
             <Navigation role={role} username={name} />
             <div className="topbar" style={{ marginLeft: "24px" }}>
-                <button className="btn ghost flex items-center gap-2" onClick={() => navigate(-1)}>
+                <button className="btn ghost flex items-center gap-2" onClick={() => navigate('/hr/applications', { replace: true })}>
                     <FaArrowLeft className="icon" aria-hidden="true" />
                     <span>Back</span>
                 </button>
@@ -147,21 +133,14 @@ export default function ApplicationDetail() {
                     </div>
 
                     <div className="preview-pane" aria-label="Resume preview">
-                        {!previewUrl && <div className="muted">No Document</div>}
-
-                        {
+                        {previewUrl ? (
                             <iframe
                                 title="resume-pdf"
                                 src={`${previewUrl}#toolbar=1&navpanes=0`}
                                 style={{ width: "100%", height: "100%", border: 0 }}
                             />
-                        }
-
-                        {previewUrl && fileKind === "other" && (
-                            <div className="muted">
-                                This type of file cannot be previewed within the current window. Please use &quot;Open in
-                                New Window&quot; or &quot;Download Attachment&quot; to view it.
-                            </div>
+                        ) : (
+                            <div className="muted">No Document</div>
                         )}
                     </div>
                 </section>
