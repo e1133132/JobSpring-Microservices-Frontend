@@ -111,7 +111,7 @@ export default function UpdateJob() {
 
         try {
             setSubmitting(true);
-            const res = await api.patch(`/api/job/companies/${companyId}/jobs/${jobId}`, payload);
+            const res = await api.patch(`/api/user/companies/${companyId}/jobs/${jobId}`, payload);
             console.log("Updated:", res.data);
             setServerMsg("Job updated successfully!");
             setTimeout(() => navigate("/hr/JobPosition"), 1200);
