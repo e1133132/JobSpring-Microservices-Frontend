@@ -98,7 +98,7 @@ export default function ApplicationDetail() {
         <div className="app-root">
             <Navigation role={role} username={name} />
             <div className="topbar" style={{ marginLeft: "24px" }}>
-                <button className="btn ghost flex items-center gap-2" onClick={() => navigate(-1)}>
+                <button className="btn ghost flex items-center gap-2" onClick={() => navigate('/hr/applications', { replace: true })}>
                     <FaArrowLeft className="icon" aria-hidden="true" />
                     <span>Back</span>
                 </button>
@@ -147,21 +147,14 @@ export default function ApplicationDetail() {
                     </div>
 
                     <div className="preview-pane" aria-label="Resume preview">
-                        {!previewUrl && <div className="muted">No Document</div>}
-
-                        {
+                        {previewUrl ? (
                             <iframe
                                 title="resume-pdf"
                                 src={`${previewUrl}#toolbar=1&navpanes=0`}
                                 style={{ width: "100%", height: "100%", border: 0 }}
                             />
-                        }
-
-                        {previewUrl && fileKind === "other" && (
-                            <div className="muted">
-                                This type of file cannot be previewed within the current window. Please use &quot;Open in
-                                New Window&quot; or &quot;Download Attachment&quot; to view it.
-                            </div>
+                        ) : (
+                            <div className="muted">No Document</div>
                         )}
                     </div>
                 </section>

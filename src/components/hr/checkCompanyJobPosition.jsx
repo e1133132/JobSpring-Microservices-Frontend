@@ -22,13 +22,13 @@ function normalizePosition(p = {}) {
     location: p.location ?? p.city ?? "",
     type: p.type ?? p.employmentType ?? "",
     statusNum,
-    status, 
+    status,
     postedAt: p.postedAt ?? p.posted_at,
   };
 }
 
 const STATUS_MAP = {
-  valid:   { text: "valid",   cls: "chip chip-valid" },
+  valid: { text: "valid", cls: "chip chip-valid" },
   invalid: { text: "invalid", cls: "chip chip-invalid" },
 };
 
@@ -48,8 +48,8 @@ export default function CheckCompanyJobPosition() {
     try {
       const res = await api.get("/api/job/companies/jobs");
       const raw = Array.isArray(res.data?.content) ? res.data.content
-                : Array.isArray(res.data) ? res.data
-                : [];
+        : Array.isArray(res.data) ? res.data
+          : [];
       setList(raw.map(normalizePosition));
     } catch (e) {
       setError(e?.response?.data?.message || e.message || "Load failed");
@@ -66,12 +66,9 @@ export default function CheckCompanyJobPosition() {
   return (
     <div className="app-root">
       <Navigation role={role} username={username} />
-
+      <br></br><br></br>
       <div className="topbar" style={{ marginLeft: 24 }}>
-        <button className="btn ghost flex items-center gap-2" onClick={() => navigate(-1)}>
-          <FaArrowLeft className="icon" aria-hidden="true" />
-          <span>Back</span>
-        </button>
+
       </div>
 
       <div className="card" style={{ margin: "12px 24px" }}>
@@ -106,17 +103,17 @@ export default function CheckCompanyJobPosition() {
                 </div>
                 <div className="pc-right">
                   {p.statusNum === 0 ? (
-                  <button
-                    className="btn primary"
-                    onClick={() => navigate(`/hr/jobs-detail/${p.id}`, { state: { id: p.id } })}
-                    title="Update this position"
-                  >
-                    Update
-                  </button>
+                    <button
+                      className="btn primary"
+                      onClick={() => navigate(`/hr/jobs-detail/${p.id}`, { state: { id: p.id } })}
+                      title="Update this position"
+                    >
+                      Update
+                    </button>
                   ) : (
-                      <button className="btn disabled" disabled title="This position is closed">
-                        Closed
-                      </button>
+                    <button className="btn disabled" disabled title="This position is closed">
+                      Closed
+                    </button>
                   )}
                 </div>
               </article>
