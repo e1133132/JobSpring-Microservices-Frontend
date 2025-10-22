@@ -32,7 +32,6 @@ export default function ApplicationDetail() {
     const [updating] = useState(false);
     const [, setError] = useState("");
     const [previewUrl, setPreviewUrl] = useState("");
-    const [resumeFileId,] = useState("");
 
     useEffect(() => {
         load();
@@ -53,19 +52,6 @@ export default function ApplicationDetail() {
             setLoading(false);
         }
     }
-
-
-    const legacyResumeUrl = data?.resumeUrl || "";
-
-    const fileKind = useMemo(() => {
-        if (resumeFileId) return "pdf";
-        if (!legacyResumeUrl) return "none";
-        const lower = legacyResumeUrl.split("?")[0].toLowerCase();
-        if (lower.endsWith(".pdf") || legacyResumeUrl.startsWith("data:application/pdf")) return "pdf";
-        if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lower)) return "image";
-        return "other";
-    }, [resumeFileId, legacyResumeUrl]);
-
 
 
     const statusInfo = STATUS_MAP[data?.status ?? 0] ?? STATUS_MAP[0];
