@@ -1,17 +1,35 @@
-name: DAST-Vercel
-
-on:
-  pull_request:
-    branches:
-      - '**'
+name: DAST - Frontend
 
 permissions:
   contents: read
-  actions: write  # ← allow creating artifact containers
+  actions: write
+
+on:
+  workflow_dispatch:
 
 jobs:
-  noop:
+  zap-docker:
     runs-on: ubuntu-latest
     steps:
-      - name: No operation
-        run: echo "DAST-Vercel workflow triggered, but no action defined."
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure write perms
+        run: sudo chmod -R 777 "$GITHUB_WORKSPACE"
+
+      - name: Run ZAP Baseline via Docker
+        run: |
+          docker run --rm --user 0:0 -w /zap/wrk \
+            -v "$GITHUB_WORKSPACE":/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
+            /zap/zap-baseline.py -t https://job-spring-frontend.vercel.app -a \
+            -r report_html.html -J report_json.json -w report_md.md || true
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-frontend-report-${{ github.run_id }}
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+          if-no-files-found: warn
