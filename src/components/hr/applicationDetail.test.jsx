@@ -205,10 +205,12 @@ test('Reject disabled when status = Rejected', async () => {
   expect(screen.getByRole('button', { name: /Reject/i })).toBeDisabled()
 })
 
-test('Back button navigates -1', async () => {
-  renderPage()
-  await screen.findByText(/Application #101/i)
+test('Back button navigates to /hr/applications', async () => {
+  renderPage();
+  await screen.findByText(/Application #101/i);
 
-  await userEvent.click(screen.getByRole('button', { name: /Back/i }))
-  expect(navigateMock).toHaveBeenCalledWith(-1)
-})
+  await userEvent.click(screen.getByRole('button', { name: /Back/i }));
+
+  expect(navigateMock).toHaveBeenCalledWith('/hr/applications', { replace: true });
+});
+
